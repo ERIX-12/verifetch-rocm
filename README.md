@@ -1,17 +1,34 @@
-# VeriFetch ROCm — Sub-Second "Cite-or-Refuse" Web & Table Value Extractor
+# VeriFetch ROCm Suite — AMD AI League (Matches 2, 3 & 4 on AMD Instinct MI300X)
 
-Built for **AMD AI League Match 4: Intelligent Web Information Retrieval** on **AMD Instinct MI300X (`rocm/pytorch`)** by **Tusiime Eriya** (Team `VeriFetch ROCm`).
+Built by **Tusiime Eriya** (`ERIX-12` · Team `VeriFetch ROCm`) for the **AMD AI League** on `rocm/pytorch:rocm6.2_ubuntu22.04_py3.10_pytorch_release_2.3.0`.
 
-## Key Architecture Highlights
-1. **Resident Unix-Socket ROCm Daemon (`/app/daemon_rocm.py` -> `/tmp/verifetch.sock`):** Keeps the extraction engine warm in AMD Instinct MI300X HBM3 VRAM so per-query CLI invocations (`/app/app.py`) complete in `~0.42s` (vs `14.8s` cold PyTorch boot and well within the `30.0s` evaluation budget).
-2. **Structure-Preserving HTML Table Linearizer (`/app/extractor.py`):** Converts HTML `<table>`, `<dl>`, and JSON-LD blocks into self-contained `[Row Header | Column Header]: Cell Value` tuples so dense technical specification tables never lose column alignment.
-3. **Deterministic Cite-or-Refuse Substring Verifier (`0.0%` Hallucination):** Verifies character-for-character that the extracted atomic answer exists in the raw source DOM before writing `/app/output/<query-id>_output.json`. When unverified, it deterministically abstains (`answer: ""`, `citations: []`).
+## Multi-Repository Index (Matches 2, 3 & 4)
+Per the AMD AI League submission guidelines (*"If you have multiple repositories, mention them in the readme"*), this project spans three dedicated `rocm/pytorch` containers:
 
-## Container & CLI Usage
+1. **Match 4 — Intelligent Web Information Retrieval (`+1,800 XP`):**
+   - **Repository:** `ERIX-12/verifetch-rocm` (This Repository)
+   - **Architecture:** Sub-second (`0.42s`) warm Unix-socket daemon (`daemon_rocm.py`), structure-preserving HTML `<table>` linearizer (`extractor.py`), and deterministic `Cite-or-Refuse` substring verifier (`0.0%` hallucination rate).
+2. **Match 3 — Retrieval-Augmented Generation (`+1,500 XP`):**
+   - **Repository:** `ERIX-12/rocm-corpus-rag`
+   - **Architecture:** Offline mixed-document RAG engine (`rag_engine.py`) parsing PDF, DOCX, XLSX, CSV, Markdown, and logs with hybrid BM25 + dense BGE scoring and exact source filename attribution (`sources` / `files` in `/app/output/<query-id>_output.json`).
+3. **Match 2 — Optical Character Recognition (`+1,200 XP`):**
+   - **Repository:** `ERIX-12/rocm-vision-ocr`
+   - **Architecture:** Resident `Qwen/Qwen2.5-VL-7B-Instruct` (`bfloat16`) VLM OCR engine (`ocr_engine.py`) with adaptive ROI contrast normalization and deterministic alphanumeric post-filtering for license plates, road signs, and industrial labels.
+
+---
+
+## Match 4 Quick Start (`verifetch-rocm`)
 ```bash
-docker build -t erix12/verifetch-rocm:match4 .
-docker run --rm erix12/verifetch-rocm:match4 \
-  python3 /app/app.py \
-  --query-id q_mi300x_fp16 \
-  --query "What is the Peak FP16 / BF16 Matrix TFLOPS (without sparsity) for AMD Instinct MI300X?"
+python3 tests/test_match4_harness.py
+python3 app.py --query-id q_mi300x_fp16 --query "What is the Peak FP16 / BF16 Matrix TFLOPS (without sparsity) for AMD Instinct MI300X?"
+```
+
+## Match 3 Quick Start (`rocm-corpus-rag`)
+```bash
+python3 app.py --query-id rag_001 --corpus sample_docs --query "How much HBM3 memory does the MI300X have?"
+```
+
+## Match 2 Quick Start (`rocm-vision-ocr`)
+```bash
+python3 app.py --query-id ocr_001 --image sample_plate.png
 ```
